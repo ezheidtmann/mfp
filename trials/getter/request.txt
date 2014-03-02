@@ -1,0 +1,14 @@
+<!-- 
+  This query gets all the ways that describe the borders of the park, but it doesn't
+  get the trails in the park. Look for k="RLIS:systemname" v="Forest Park Trails" ??
+  -->
+
+<osm-script>
+  <id-query type="relation" ref="1760140" />
+  <union>
+    <item />
+    <recurse type="relation-way"/>
+    <recurse type="way-node"/>
+  </union>
+  <print/>
+</osm-script>
