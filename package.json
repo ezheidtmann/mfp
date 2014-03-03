@@ -11,6 +11,9 @@
   "dependencies": {
     "express": "~3.4.8",
     "connect": "~2.12.0",
-    "async": "~0.2.10"
+    "async": "~0.2.10",
+    "date-utils": "^1.2.15",
+    "mongoose": "^3.8.8",
+    "underscore": "^1.6.0"
   }
 }

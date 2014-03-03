@@ -13,7 +13,6 @@ app.use(connect.json());
 // Not sure what this does
 app.use(connect.methodOverride());
 
-
 // Parse querystring into req.query
 app.use(connect.query());
 

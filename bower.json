@@ -1,0 +1,21 @@
+{
+  "name": "mfp",
+  "version": "0.0.0",
+  "homepage": "https://github.com/ezheidtmann/mfp",
+  "authors": [
+    "Evan Heidtmann <evan.heidtmann@gmail.com>"
+  ],
+  "main": "htdocs/index.html",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "leaflet": "~0.7.2"
+  }
+}
