@@ -10,15 +10,32 @@ var gjLayer = L.geoJson(null, {
     color: '#ff7800',
     weight: 5,
     opacity: 0.65
+  },
+  onEachFeature: function (feature, layer) {
+    layer.on('click', function(e) {
+      layer.selected = !layer.selected;
+      if (layer.selected) {
+        layer.setStyle({ color: 'blue' });
+      }
+      else {
+        layer.setStyle({ color: '#ff7800' });
+      }
+    });
   }
 }).addTo(map);
 
-var req = new XMLHttpRequest();
-req.open('get', 'segments', true);
-req.send();
-req.onload = function() {
-  var segments = JSON.parse(this.responseText);
-  gjLayer.addData(segments);
-  map.fitBounds(gjLayer.getBounds());
+function loadData() {
+  var req = new XMLHttpRequest();
+  req.open('get', 'segments', true);
+  req.send();
+  req.onload = function() {
+    var segments = JSON.parse(this.responseText);
+    gjLayer.clearLayers();
+    gjLayer.addData(segments);
+    map.fitBounds(gjLayer.getBounds());
+  };
 };
+
+loadData();
+setTimeout(loadData, 500);
 
