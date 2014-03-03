@@ -30,3 +30,7 @@ body {
   padding: 0.5em 0;
   margin: 2em 0;
 }
+
+#map {
+  height: 400px;
+}
