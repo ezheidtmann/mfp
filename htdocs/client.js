@@ -37,5 +37,5 @@ function loadData() {
 };
 
 loadData();
-setTimeout(loadData, 500);
+//setInterval(loadData, 5000);
 
