@@ -15,19 +15,19 @@ var gjLayer = L.geoJson(null, {
     layer.on('click', function(e) {
       layer.selected = !layer.selected;
       if (layer.selected) {
-        layer.setStyle({ color: 'blue' });
+        layer.setStyle && layer.setStyle({ color: 'blue' });
       }
       else {
-        layer.setStyle({ color: '#ff7800' });
+        layer.setStyle && layer.setStyle({ color: '#ff7800' });
       }
     })
-    .bindPopup('<strong>' + feature.geometry.type + '</strong><pre>' + JSON.stringify(feature.properties, null, '  ') + '</pre>');
+    .bindPopup('<strong>' + feature.geometry.type + '</strong>' + feature.osm_id + '<pre>' + JSON.stringify(feature.properties, null, '  ') + '</pre>');
   }
 }).addTo(map);
 
 function loadData() {
   var req = new XMLHttpRequest();
-  req.open('get', 'trails_within_fp', true);
+  req.open('get', 'segments', true);
   req.send();
   req.onload = function() {
     var segments = JSON.parse(this.responseText);
