@@ -1,7 +1,7 @@
 
 var map = L.map('map').setView([51.505, -0.09], 13);
-L.tileLayer('http://{s}.tile.cloudmade.com/616a3b76c74a4e54b9ac6033ffc22a0a/997/256/{z}/{x}/{y}.png', {
-  attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+L.tileLayer('https://{s}.tiles.mapbox.com/v3/ezh.i779mp4n/{z}/{x}/{y}.png', {
+  attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
   maxZoom: 18
 }).addTo(map);
 
@@ -20,7 +20,8 @@ var gjLayer = L.geoJson(null, {
       else {
         layer.setStyle({ color: '#ff7800' });
       }
-    });
+    })
+    .bindPopup('<strong>' + feature.geometry.type + '</strong><pre>' + JSON.stringify(feature.properties, null, '  ') + '</pre>');
   }
 }).addTo(map);
 
