@@ -27,7 +27,7 @@ var gjLayer = L.geoJson(null, {
 
 function loadData() {
   var req = new XMLHttpRequest();
-  req.open('get', 'segments', true);
+  req.open('get', 'trails_within_fp', true);
   req.send();
   req.onload = function() {
     var segments = JSON.parse(this.responseText);
