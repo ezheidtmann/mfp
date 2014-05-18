@@ -17,7 +17,7 @@ module.exports = function (app) {
 
       data.util.segmentize(ways, function(err, segments) {
         if (err) { res.send(500, { error: err }); return; }
-        data.util.sendWays(res, segments); 
+        res.send(segments);
       });
     });
   });

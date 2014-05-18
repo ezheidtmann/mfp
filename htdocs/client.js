@@ -1,3 +1,136 @@
+var mfp = {};
+
+function clickLayer(ev) {
+  var layer = ev.target;
+  var feature = layer.mfp.feature;
+  mfp.startLayer = mfp.startLayer || layer;
+
+
+  if (layer != mfp.startLayer) {
+    var routeInfo = routeToLayer(layer);
+    _.extend(mfp, routeInfo);
+    console.log(routeInfo);
+  }
+  recolorRoute();
+}
+
+function recolorRoute() {
+  _.each(mfp.routeLayers, function(layer) {
+    layer.setStyle({ color: 'blue' });
+  });
+}
+
+function routeToLayer(destLayer) {
+  if (!mfp.startLayer) {
+    throw new ReferenceError('Attempted to route to a layer when there is no starting layer.');
+  }
+
+  var destFeature = destLayer.mfp.feature;
+
+  var startFeature = mfp.startLayer.mfp.feature;
+
+  var visited = {};
+  var distTo = {};
+  var routeTo = {};
+  var features = {};
+
+  _.each(mfp.graph.allFeatures(), function(feat) {
+    features[feat.fid] = feat;
+    distTo [feat.fid] = +Infinity;
+    visited[feat.fid] = false;
+    routeTo[feat.fid] = []; // list of features, starting with start
+  });
+
+  //visited[startFeature.fid] = true;
+  distTo[startFeature.fid] = 0;
+  routeTo[startFeature.fid].push(startFeature);
+
+  var current = startFeature;
+  while (true) {
+    var neighbors = mfp.graph.allAdjacentFeatures(current);
+
+    // Compute distances for each unvisited neighbor and keep track
+    // of the route taken
+    neighbors = _.reject(neighbors, function(f) { return visited[f.fid]; });
+    _.each(neighbors, function(neighbor) {
+      var dist = neighbor.properties.geo_length + distTo[current.fid];
+      if (dist <= distTo[neighbor.fid]) {
+        distTo[neighbor.fid] = dist;
+        routeTo[neighbor.fid] = routeTo[current.fid].concat(current);
+      }
+    });
+
+    visited[current.fid] = true;
+
+    if (visited[destFeature.fid]) {
+      break;
+    }
+
+    // move to next current unvisited
+    current = _.chain(features)
+      .reject(function(f) { return visited[f.fid]; })
+      .sortBy(function(f) { return distTo[f.fid]; })
+      .first()
+      .value();
+
+    if (current.properties.geo_length == Infinity) {
+      throw new Error('Graph not connected?');
+    }
+  }
+
+  // Begin constructing return value structure
+  var ret = {
+    routeFeatures: routeTo[destFeature.fid].concat(destFeature)
+   ,dist: distTo[destFeature.fid]
+  };
+
+  // Transform features to layers
+  ret.routeLayers = _.map(ret.routeFeatures, function(feat) {
+    return feat.mfp.layer;
+  });
+
+  return ret;
+}
+
+function Graph() {
+  var self = this;
+  this._features_by_endpoint = {};
+  this._all_endpoints = [];
+  this._nextFid = 0;
+  this._features = [];
+
+  this.addFeature = function(feature) {
+    feature.fid = this._nextFid++;
+    this._features.push(feature);
+    for (var i = 0; i < feature.properties.endpoints.length; ++i) {
+      var nid = feature.properties.endpoints[i];
+      this._features_by_endpoint[nid] = this._features_by_endpoint[nid] || [];
+      this._features_by_endpoint[nid].push(feature);
+      this._all_endpoints.push(nid);
+    }
+  }
+
+  // Returns array of endpoints if the two features share an endpoint
+  this.areFeaturesAdjacent = function(feat1, feat2) {
+    var inter = _.intersection(feat1.properties.endpoints, feat2.properties.endpoints);
+    return inter.length ? inter : false;
+  }
+
+  // Returns array of all features adjacent to the argument
+  this.allAdjacentFeatures = function(feat) {
+    var self = this;
+    return _.chain(feat.properties.endpoints)
+      .map(function(nid) { return self._features_by_endpoint[nid]; })
+      .flatten()
+      .reject(function(f) { return f === feat; })
+      .value();
+  }
+
+  this.allFeatures = function() {
+    return this._features;
+  }
+}
+
 
 var map = L.map('map').setView([51.505, -0.09], 13);
 L.tileLayer('https://{s}.tiles.mapbox.com/v3/ezh.i779mp4n/{z}/{x}/{y}.png', {
@@ -12,16 +145,12 @@ var gjLayer = L.geoJson(null, {
     opacity: 0.65
   },
   onEachFeature: function (feature, layer) {
-    layer.on('click', function(e) {
-      layer.selected = !layer.selected;
-      if (layer.selected) {
-        layer.setStyle && layer.setStyle({ color: 'blue' });
-      }
-      else {
-        layer.setStyle && layer.setStyle({ color: '#ff7800' });
-      }
-    })
-    .bindPopup('<strong>' + feature.geometry.type + '</strong>' + feature.osm_id + '<pre>' + JSON.stringify(feature.properties, null, '  ') + '</pre>');
+    feature.mfp = { layer: layer }
+    layer.mfp = { feature: feature };
+    mfp.graph.addFeature(feature);
+
+    layer.on('click', clickLayer)
+    //.bindPopup('<strong>' + feature.geometry.type + '</strong>' + feature.osm_id + '<pre>' + JSON.stringify(feature.properties, null, '  ') + '</pre>');
   }
 }).addTo(map);
 
@@ -35,6 +164,8 @@ function loadData() {
     gjLayer.addData(segments);
     map.fitBounds(gjLayer.getBounds());
   };
+
+  mfp.graph = new Graph();
 };
 
 loadData();
