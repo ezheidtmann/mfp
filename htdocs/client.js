@@ -3,8 +3,14 @@ var mfp = {};
 function clickLayer(ev) {
   var layer = ev.target;
   var feature = layer.mfp.feature;
-  mfp.startLayer = mfp.startLayer || layer;
 
+  if (mfp.routeLayers && mfp.routeLayers.length) {
+    mfp.startLayer = undefined;
+    mfp.routeLayers = mfp.routeFeatures = mfp.dist = undefined;
+    recolorRoute();
+  }
+
+  mfp.startLayer = mfp.startLayer || layer;
 
   if (layer != mfp.startLayer) {
     var routeInfo = routeToLayer(layer);
@@ -15,11 +21,31 @@ function clickLayer(ev) {
 }
 
 function recolorRoute() {
+  gjLayer.eachLayer(function(layer) {
+    layer.setStyle({ color: 'orange' });
+  });
+
   _.each(mfp.routeLayers, function(layer) {
     layer.setStyle({ color: 'blue' });
   });
 }
 
+/**
+ * Implementation of Dijkstra's algorithm. We treat each segment ("feature") as a
+ * node in the graph and as an edge. The starting feature has distance 0; each
+ * additional feature has a distance equal to its length. Think of each
+ * navigation step as moving us towards the "end" of the destination feature.
+ * We avoid explicitly managing directionality of the search, but in a future
+ * iteration we might make it explicit.
+ *
+ * @param destLayer Leaflet layer object for the segment. Needs property mfp.feature.
+ * @returns Object with the following properties:
+ *    routeFeatures: features composing the route
+ *    routeLayers: layers composing the route
+ *    dist: geo_length of the route, in radians
+ *
+ * @throws Error if there is a discontinuity in the graph
+ */
 function routeToLayer(destLayer) {
   if (!mfp.startLayer) {
     throw new ReferenceError('Attempted to route to a layer when there is no starting layer.');
@@ -73,7 +99,7 @@ function routeToLayer(destLayer) {
       .first()
       .value();
 
-    if (current.properties.geo_length == Infinity) {
+    if (distTo[current.fid] == Infinity) {
       throw new Error('Graph not connected?');
     }
   }
@@ -122,6 +148,7 @@ function Graph() {
     return _.chain(feat.properties.endpoints)
       .map(function(nid) { return self._features_by_endpoint[nid]; })
       .flatten()
+      .uniq()
       .reject(function(f) { return f === feat; })
       .value();
   }
