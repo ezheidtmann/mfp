@@ -9,6 +9,7 @@ Resources
 Two routing plugins for leaflet:
 
 https://github.com/Turistforeningen/leaflet-routing
+
 https://github.com/perliedman/leaflet-routing-machine
 
 The first supports a custom routing function; we might be able to do a good UI more quickly by building upon that framework.
